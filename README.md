@@ -1,66 +1,96 @@
-# Linda Menu - Digital Menu & Sales System
+# Linda Menu - Digital Menu Application
 
-A modern, elegant, and high-performance digital menu designed to streamline sales via WhatsApp. Built with **Next.js 15**, **Supabase**, and **Framer Motion**, it offers a seamless experience for both customers and business owners.
+Linda Menu is a modern, high-performance digital menu application built with Next.js 15+, designed to provide a seamless ordering experience. It features a responsive interface, category filtering, and a shopping cart system.
 
-![Project Preview](assets/next14.png)
+## 📱 Screenshots
 
-## 🚀 Features
+<div align="center">
+  <img src="assets/home.jpg" alt="Home Screen" width="45%" />
+  <img src="assets/products-list.jpg" alt="Products List" width="45%" />
+</div>
 
-- **Dynamic Menu:** Fetch products, categories, and variations directly from Supabase.
-- **Smart Shopping Cart:** Persistent cart management using **Zustand**, allowing multiple items and quantity adjustments.
-- **Product Variations:** Support for items with multiple options (e.g., sizes, brands) with independent pricing and stock control.
-- **Real-time Filtering & Search:** Browse by categories or search for specific products/variations with instant feedback.
-- **Elegant Animations:** Smooth scroll reveals and transitions powered by **Framer Motion** for a native app feel.
-- **WhatsApp Integration:** Generates a structured order summary and redirects the customer directly to WhatsApp.
-- **Responsive Design:** Fully optimized for mobile devices with a "mobile-first" approach.
-- **Performance Optimized:** Next.js Image optimization and SSR for fast loading times.
+<div align="center">
+  <img src="assets/storybok_screen_shot.png" alt="Storybook Components" width="90%" />
+</div>
 
-## 🛠️ Tech Stack
+## 🚀 Technologies
 
-- **Framework:** [Next.js 15](https://nextjs.org/) (App Router)
-- **Database:** [Supabase](https://supabase.com/) (PostgreSQL)
-- **State Management:** [Zustand](https://docs.pmnd.rs/zustand/)
-- **Styling:** [Tailwind CSS 4](https://tailwindcss.com/)
-- **Animations:** [Framer Motion](https://www.framer.com/motion/)
-- **Icons:** [Lucide React](https://lucide.dev/)
+This project leverages a modern tech stack:
 
-## ⚙️ Environment Variables
+- **Framework:** [Next.js](https://nextjs.org/) (App Router)
+- **Language:** [TypeScript](https://www.typescriptlang.org/)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/)
+- **Backend & Database:** [Supabase](https://supabase.com/)
+- **State Management:** [Zustand](https://github.com/pmndrs/zustand)
+- **Animation:** [Framer Motion](https://www.framer.com/motion/)
 
-To run this project, you will need to add the following environment variables to your `.env.local` file and your Netlify/Vercel dashboard:
+## ⚙️ Getting Started
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-NEXT_PUBLIC_WHATSAPP_NUMBER=your_whatsapp_number_with_country_code
+### Prerequisites
+
+- Node.js (Latest LTS recommended)
+- Supabase Account
+
+### Installation
+
+1. **Clone the repository:**
+
+   ```bash
+   git clone <repository-url>
+   cd Linda-Menu
+   ```
+
+2. **Install dependencies:**
+
+   ```bash
+   npm install
+   # or
+   yarn install
+   # or
+   bun install
+   ```
+
+3. **Environment Setup:**
+   Copy the example environment file and fill in your credentials:
+   ```bash
+   cp enviroment-example.env .env.local
+   ```
+   Edit `.env.local` with your `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `NEXT_PUBLIC_WHATSAPP_NUMBER`.
+
+### Running the Project
+
+To start the development server:
+
+```bash
+npm run dev
 ```
 
-## 🚀 Getting Started
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/your-username/linda-menu.git
-    ```
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
-3.  **Run the development server:**
-    ```bash
-    npm run dev
-    ```
-4.  **Open [http://localhost:3000](http://localhost:3000)** in your browser to see the result.
+## 🛠️ Maintenance
 
-## 📦 Deployment on Netlify
+- **Testing:** Run the test suite.
+  ```bash
+  npm test
+  ```
+- **Linting:** Check for code quality issues.
+  ```bash
+  npm run lint
+  ```
+- **Build:** Create a production-ready build.
+  ```bash
+  npm run build
+  ```
 
-1.  Push your code to GitHub.
-2.  Connect your repository to Netlify.
-3.  Add the **Environment Variables** in the Netlify dashboard.
-4.  Use `npm run build` as the build command and `.next` (or `out` if static) as the publish directory.
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-Developed with ❤️ to provide the best ordering experience.
+Developed with ❤️ for a better dining experience.
+details.
 
-# Linda-Menu
+---
 
-# Linda-Menu
+Developed with ❤️ for a better dining experience.
