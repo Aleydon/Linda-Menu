@@ -22,6 +22,7 @@
     "apply:instructions": "ts-node scripts/apply_github_instructions.ts"
   },
   "dependencies": {
+    "@netlify/plugin-nextjs": "^5.15.11",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "7.8.0",
     "@supabase/supabase-js": "^2.108.1",
