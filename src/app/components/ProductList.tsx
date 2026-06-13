@@ -39,10 +39,17 @@ export default function ProductList({ products }: ProductListProps) {
     }
   }, [products]);
 
-  const updateCardQuantity = (productId: string | number, delta: number) => {
+  const updateCardQuantity = (
+    productId: string | number,
+    delta: number,
+    maxStock: number
+  ) => {
     setQuantities(prev => ({
       ...prev,
-      [productId]: Math.max(1, (prev[productId] || 1) + delta)
+      [productId]: Math.min(
+        maxStock,
+        Math.max(1, (prev[productId] || 1) + delta)
+      )
     }));
   };
 
@@ -50,9 +57,7 @@ export default function ProductList({ products }: ProductListProps) {
     const variation = selectedVariations[product.id];
     const qty = quantities[product.id] || 1;
 
-    for (let i = 0; i < qty; i++) {
-      addItem(product, variation);
-    }
+    addItem(product, variation, qty);
 
     setQuantities(prev => ({ ...prev, [product.id]: 1 }));
   };
@@ -81,15 +86,19 @@ export default function ProductList({ products }: ProductListProps) {
           product.variations && product.variations.length > 0;
         const currentVariation = selectedVariations[product.id];
 
+        const totalStock = hasVariations
+          ? product.variations!.reduce((acc, v) => acc + (v.stock || 0), 0)
+          : product.stock || 0;
+
         const displayPrice = currentVariation
           ? currentVariation.price
           : product.price || 0;
 
-        const displayStock = currentVariation
+        const currentStock = currentVariation
           ? currentVariation.stock
           : (product.stock ?? 0);
 
-        const isOutOfStock = isMounted && displayStock <= 0;
+        const isOutOfStock = isMounted && currentStock <= 0;
 
         return (
           <motion.div
@@ -120,9 +129,9 @@ export default function ProductList({ products }: ProductListProps) {
               )}
 
               <div className="absolute top-4 left-4 flex gap-2">
-                {displayStock > 0 ? (
+                {totalStock > 0 ? (
                   <span className="rounded-full bg-green-500/90 px-3 py-1 text-[10px] font-black text-white uppercase shadow-sm backdrop-blur-md">
-                    Em estoque ({displayStock})
+                    Em estoque ({totalStock})
                   </span>
                 ) : (
                   <span className="rounded-full bg-red-500/90 px-3 py-1 text-[10px] font-black text-white uppercase shadow-sm backdrop-blur-md">
@@ -151,12 +160,20 @@ export default function ProductList({ products }: ProductListProps) {
                     {product.variations!.map(v => (
                       <button
                         key={v.id || v.name}
-                        onClick={() =>
+                        onClick={() => {
                           setSelectedVariations(prev => ({
                             ...prev,
                             [product.id]: v
-                          }))
-                        }
+                          }));
+                          // Reset quantity if it exceeds new variation's stock
+                          setQuantities(prev => ({
+                            ...prev,
+                            [product.id]: Math.min(
+                              prev[product.id] || 1,
+                              v.stock
+                            )
+                          }));
+                        }}
                         className={`rounded-xl border px-4 py-2 text-xs font-bold transition-all ${
                           selectedVariations[product.id]?.id === v.id ||
                           selectedVariations[product.id]?.name === v.name
@@ -164,7 +181,8 @@ export default function ProductList({ products }: ProductListProps) {
                             : 'border-gray-100 bg-white text-gray-600 hover:bg-gray-50'
                         }`}
                       >
-                        {v.name}
+                        {v.name} - R$ {Number(v.price).toFixed(2)} ({v.stock}{' '}
+                        disp.)
                       </button>
                     ))}
                   </div>
@@ -175,17 +193,23 @@ export default function ProductList({ products }: ProductListProps) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-1">
                     <button
-                      onClick={() => updateCardQuantity(product.id, -1)}
-                      className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-gray-400 shadow-sm transition-all hover:text-orange-600 active:scale-90"
+                      disabled={isOutOfStock}
+                      onClick={() =>
+                        updateCardQuantity(product.id, -1, currentStock)
+                      }
+                      className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-gray-400 shadow-sm transition-all hover:text-orange-600 active:scale-90 disabled:opacity-50"
                     >
                       <Minus size={16} />
                     </button>
                     <span className="w-6 text-center text-sm font-black text-gray-700">
-                      {quantities[product.id] || 1}
+                      {isOutOfStock ? 0 : quantities[product.id] || 1}
                     </span>
                     <button
-                      onClick={() => updateCardQuantity(product.id, 1)}
-                      className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-gray-400 shadow-sm transition-all hover:text-orange-600 active:scale-90"
+                      disabled={isOutOfStock}
+                      onClick={() =>
+                        updateCardQuantity(product.id, 1, currentStock)
+                      }
+                      className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-gray-400 shadow-sm transition-all hover:text-orange-600 active:scale-90 disabled:opacity-50"
                     >
                       <Plus size={16} />
                     </button>
@@ -193,10 +217,10 @@ export default function ProductList({ products }: ProductListProps) {
 
                   <div className="text-right">
                     <span className="block text-[10px] font-black tracking-widest text-gray-400 uppercase">
-                      Preço
+                      {quantities[product.id] > 1 ? 'Subtotal' : 'Preço'}
                     </span>
                     <motion.div
-                      key={displayPrice}
+                      key={`${displayPrice}-${quantities[product.id]}`}
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="text-3xl font-black text-gray-900"
@@ -204,7 +228,9 @@ export default function ProductList({ products }: ProductListProps) {
                       <span className="mr-1 text-sm font-bold text-orange-600">
                         R$
                       </span>
-                      {Number(displayPrice).toFixed(2)}
+                      {(displayPrice * (quantities[product.id] || 1)).toFixed(
+                        2
+                      )}
                     </motion.div>
                   </div>
                 </div>
@@ -219,7 +245,7 @@ export default function ProductList({ products }: ProductListProps) {
                   }`}
                 >
                   <Plus size={18} strokeWidth={3} />
-                  Adicionar ao Pedido
+                  Adicionar ao Carrinho
                 </button>
               </div>
             </div>

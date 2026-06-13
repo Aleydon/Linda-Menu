@@ -4,7 +4,7 @@ import { CartItem, Product, Variation } from '@/types/product';
 
 interface CartStore {
   items: CartItem[];
-  addItem: (product: Product, variation?: Variation) => void;
+  addItem: (product: Product, variation?: Variation, quantity?: number) => void;
   removeItem: (productId: string | number, variationName?: string) => void;
   updateQuantity: (
     productId: string | number,
@@ -19,7 +19,7 @@ interface CartStore {
 export const useCart = create<CartStore>((set, get) => ({
   items: [],
 
-  addItem: (product, variation) => {
+  addItem: (product, variation, quantity = 1) => {
     set(state => {
       const existingItemIndex = state.items.findIndex(
         item =>
@@ -27,16 +27,23 @@ export const useCart = create<CartStore>((set, get) => ({
           item.selectedVariation?.name === variation?.name
       );
 
+      const availableStock = variation ? variation.stock : product.stock;
+
       if (existingItemIndex > -1) {
         const newItems = [...state.items];
-        newItems[existingItemIndex].quantity += 1;
+        const currentQty = newItems[existingItemIndex].quantity;
+        const newQty = Math.min(currentQty + quantity, availableStock);
+        newItems[existingItemIndex].quantity = newQty;
         return { items: newItems };
       }
+
+      const initialQty = Math.min(quantity, availableStock);
+      if (initialQty <= 0 && availableStock > 0) return state; // Should not happen if UI handles it
 
       return {
         items: [
           ...state.items,
-          { ...product, quantity: 1, selectedVariation: variation }
+          { ...product, quantity: initialQty, selectedVariation: variation }
         ]
       };
     });
@@ -61,11 +68,18 @@ export const useCart = create<CartStore>((set, get) => ({
     }
 
     set(state => ({
-      items: state.items.map(item =>
-        item.id === productId && item.selectedVariation?.name === variationName
-          ? { ...item, quantity }
-          : item
-      )
+      items: state.items.map(item => {
+        if (
+          item.id === productId &&
+          item.selectedVariation?.name === variationName
+        ) {
+          const availableStock = item.selectedVariation
+            ? item.selectedVariation.stock
+            : item.stock;
+          return { ...item, quantity: Math.min(quantity, availableStock) };
+        }
+        return item;
+      })
     }));
   },
 

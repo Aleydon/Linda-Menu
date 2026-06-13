@@ -57,17 +57,32 @@ export default function Cart() {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(true)}
-        className="fixed right-8 bottom-8 z-50 flex h-16 w-16 items-center justify-center rounded-3xl bg-orange-600 text-white shadow-2xl shadow-orange-600/40 transition-colors hover:bg-orange-700"
+        className={`fixed right-8 bottom-8 z-50 flex h-16 items-center justify-center rounded-full bg-orange-600 text-white shadow-2xl shadow-orange-600/40 transition-all hover:bg-orange-700 ${
+          totalItems() > 0 ? 'gap-4 px-8' : 'w-16'
+        }`}
       >
-        <ShoppingCart size={30} strokeWidth={2.5} />
+        <div className="relative flex items-center justify-center">
+          <ShoppingCart size={30} strokeWidth={2.5} />
+          {totalItems() > 0 && (
+            <motion.span
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="absolute -top-3 -right-3 flex h-6 w-6 items-center justify-center rounded-full border-2 border-orange-600 bg-white text-[10px] font-black text-orange-600 shadow-sm"
+            >
+              {totalItems()}
+            </motion.span>
+          )}
+        </div>
+
         {totalItems() > 0 && (
-          <motion.span
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-2xl border-4 border-white bg-green-500 text-[10px] font-black shadow-lg"
-          >
-            {totalItems()}
-          </motion.span>
+          <div className="flex flex-col items-start leading-tight">
+            <span className="text-[10px] font-black tracking-widest text-orange-100 uppercase">
+              Seu Total
+            </span>
+            <span className="text-xl font-black whitespace-nowrap">
+              R$ {totalPrice().toFixed(2)}
+            </span>
+          </div>
         )}
       </motion.button>
 
@@ -183,7 +198,13 @@ export default function Cart() {
                                     item.selectedVariation?.name
                                   )
                                 }
-                                className="flex h-8 w-8 items-center justify-center rounded-xl bg-white text-gray-400 shadow-sm transition-all hover:text-orange-600 hover:shadow-md"
+                                disabled={
+                                  item.quantity >=
+                                  (item.selectedVariation?.stock ??
+                                    item.stock ??
+                                    0)
+                                }
+                                className="flex h-8 w-8 items-center justify-center rounded-xl bg-white text-gray-400 shadow-sm transition-all hover:text-orange-600 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-30"
                               >
                                 <Plus size={14} />
                               </button>
