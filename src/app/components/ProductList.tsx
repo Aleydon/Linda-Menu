@@ -1,7 +1,13 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { Minus, Plus, ShoppingCart } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  ChevronDown,
+  ChevronUp,
+  Minus,
+  Plus,
+  ShoppingCart
+} from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
@@ -20,6 +26,9 @@ export default function ProductList({ products }: ProductListProps) {
   const [quantities, setQuantities] = useState<Record<string | number, number>>(
     {}
   );
+  const [expandedProducts, setExpandedProducts] = useState<
+    Record<string | number, boolean>
+  >({});
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -38,6 +47,13 @@ export default function ProductList({ products }: ProductListProps) {
       setSelectedVariations(prev => ({ ...prev, ...initialVariations }));
     }
   }, [products]);
+
+  const toggleExpansion = (productId: string | number) => {
+    setExpandedProducts(prev => ({
+      ...prev,
+      [productId]: !prev[productId]
+    }));
+  };
 
   const updateCardQuantity = (
     productId: string | number,
@@ -84,6 +100,7 @@ export default function ProductList({ products }: ProductListProps) {
       {products.map((product, index) => {
         const hasVariations =
           product.variations && product.variations.length > 0;
+        const isExpanded = expandedProducts[product.id];
         const currentVariation = selectedVariations[product.id];
 
         const totalStock = hasVariations
@@ -100,6 +117,12 @@ export default function ProductList({ products }: ProductListProps) {
 
         const isOutOfStock = isMounted && currentStock <= 0;
 
+        const variationsToShow = hasVariations
+          ? isExpanded
+            ? product.variations!
+            : product.variations!.slice(0, 3)
+          : [];
+
         return (
           <motion.div
             key={product.id}
@@ -111,7 +134,20 @@ export default function ProductList({ products }: ProductListProps) {
               delay: (index % 4) * 0.1,
               ease: 'easeOut'
             }}
-            className="group flex flex-col overflow-hidden rounded-[2.5rem] border border-gray-100 bg-white transition-all hover:border-orange-200 hover:shadow-2xl hover:shadow-orange-500/10"
+            onClick={() => {
+              if (
+                hasVariations &&
+                product.variations!.length > 3 &&
+                !isExpanded
+              ) {
+                toggleExpansion(product.id);
+              }
+            }}
+            className={`group flex flex-col overflow-hidden rounded-[2.5rem] border border-gray-100 bg-white transition-all hover:border-orange-200 hover:shadow-2xl hover:shadow-orange-500/10 ${
+              hasVariations && product.variations!.length > 3 && !isExpanded
+                ? 'cursor-pointer'
+                : ''
+            }`}
           >
             <div className="relative h-64 w-full overflow-hidden bg-gray-50">
               {product.image_url ? (
@@ -153,39 +189,81 @@ export default function ProductList({ products }: ProductListProps) {
 
               {hasVariations && (
                 <div className="mt-5 space-y-3">
-                  <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase">
-                    Escolha a Opção
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    {product.variations!.map(v => (
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase">
+                      Escolha a Opção
+                    </span>
+                    {product.variations!.length > 3 && (
                       <button
-                        key={v.id || v.name}
-                        onClick={() => {
-                          setSelectedVariations(prev => ({
-                            ...prev,
-                            [product.id]: v
-                          }));
-                          // Reset quantity if it exceeds new variation's stock
-                          setQuantities(prev => ({
-                            ...prev,
-                            [product.id]: Math.min(
-                              prev[product.id] || 1,
-                              v.stock
-                            )
-                          }));
+                        onClick={e => {
+                          e.stopPropagation();
+                          toggleExpansion(product.id);
                         }}
-                        className={`rounded-xl border px-4 py-2 text-xs font-bold transition-all ${
-                          selectedVariations[product.id]?.id === v.id ||
-                          selectedVariations[product.id]?.name === v.name
-                            ? 'border-orange-600 bg-orange-600 text-white shadow-lg shadow-orange-200'
-                            : 'border-gray-100 bg-white text-gray-600 hover:bg-gray-50'
-                        }`}
+                        className="flex items-center gap-1.5 text-xs font-bold text-orange-600 transition-colors hover:text-orange-700"
                       >
-                        {v.name} - R$ {Number(v.price).toFixed(2)} ({v.stock}{' '}
-                        disp.)
+                        {isExpanded ? (
+                          <>
+                            Ver menos <ChevronUp size={16} />
+                          </>
+                        ) : (
+                          <>
+                            Ver mais ({product.variations!.length - 3}){' '}
+                            <ChevronDown size={16} />
+                          </>
+                        )}
                       </button>
-                    ))}
+                    )}
                   </div>
+
+                  <motion.div
+                    layout
+                    initial={false}
+                    animate={{ height: 'auto' }}
+                    transition={{
+                      height: {
+                        duration: 0.3,
+                        ease: [0.4, 0, 0.2, 1]
+                      }
+                    }}
+                    className="flex flex-wrap gap-2 overflow-hidden"
+                  >
+                    <AnimatePresence mode="popLayout">
+                      {variationsToShow.map(v => (
+                        <motion.button
+                          layout
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.9 }}
+                          transition={{ duration: 0.2 }}
+                          key={v.id || v.name}
+                          onClick={e => {
+                            e.stopPropagation();
+                            setSelectedVariations(prev => ({
+                              ...prev,
+                              [product.id]: v
+                            }));
+                            // Reset quantity if it exceeds new variation's stock
+                            setQuantities(prev => ({
+                              ...prev,
+                              [product.id]: Math.min(
+                                prev[product.id] || 1,
+                                v.stock
+                              )
+                            }));
+                          }}
+                          className={`rounded-xl border px-4 py-2 text-xs font-bold transition-all ${
+                            selectedVariations[product.id]?.id === v.id ||
+                            selectedVariations[product.id]?.name === v.name
+                              ? 'border-orange-600 bg-orange-600 text-white shadow-lg shadow-orange-200'
+                              : 'border-gray-100 bg-white text-gray-600 hover:bg-gray-50'
+                          }`}
+                        >
+                          {v.name} - R$ {Number(v.price).toFixed(2)} ({v.stock}{' '}
+                          disp.)
+                        </motion.button>
+                      ))}
+                    </AnimatePresence>
+                  </motion.div>
                 </div>
               )}
 
@@ -194,9 +272,10 @@ export default function ProductList({ products }: ProductListProps) {
                   <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-1">
                     <button
                       disabled={isOutOfStock}
-                      onClick={() =>
-                        updateCardQuantity(product.id, -1, currentStock)
-                      }
+                      onClick={e => {
+                        e.stopPropagation();
+                        updateCardQuantity(product.id, -1, currentStock);
+                      }}
                       className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-gray-400 shadow-sm transition-all hover:text-orange-600 active:scale-90 disabled:opacity-50"
                     >
                       <Minus size={16} />
@@ -206,9 +285,10 @@ export default function ProductList({ products }: ProductListProps) {
                     </span>
                     <button
                       disabled={isOutOfStock}
-                      onClick={() =>
-                        updateCardQuantity(product.id, 1, currentStock)
-                      }
+                      onClick={e => {
+                        e.stopPropagation();
+                        updateCardQuantity(product.id, 1, currentStock);
+                      }}
                       className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-gray-400 shadow-sm transition-all hover:text-orange-600 active:scale-90 disabled:opacity-50"
                     >
                       <Plus size={16} />
@@ -237,7 +317,10 @@ export default function ProductList({ products }: ProductListProps) {
 
                 <button
                   disabled={isOutOfStock}
-                  onClick={() => handleAddWithDetails(product)}
+                  onClick={e => {
+                    e.stopPropagation();
+                    handleAddWithDetails(product);
+                  }}
                   className={`flex w-full items-center justify-center gap-3 rounded-2xl py-4 text-sm font-black tracking-widest text-white uppercase shadow-xl transition-all active:scale-[0.98] ${
                     isOutOfStock
                       ? 'cursor-not-allowed bg-gray-300 shadow-none'
